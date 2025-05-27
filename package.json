@@ -1,9 +1,9 @@
 {
-  "name": "codesandbox-node-project",
+  "name": "nodejs-express-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "vpn-app.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node vpn-app.js"
   },
   "dependencies": {
     "express": "^4.17.1"
