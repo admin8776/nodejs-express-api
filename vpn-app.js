@@ -1,103 +1,87 @@
-﻿const net = require('net');
-const fs = require('fs');
+const net = require('net');
 const http = require('http');
-const httpProxy = require('http-proxy');
-const dgram = require('dgram');
+const fs = require('fs');
 const tls = require('tls');
-const path = require('path');
+const dgram = require('dgram');
+const WebSocket = require('ws');
 
-// VPN configuration
-const VPN_IP = '192.168.43.197';
+// VPN Config
+const VPN_HOST = 'qptyzt-8080.csb.app'; // VPN server hostname
 const VPN_PORT = 8090;
+const PROXY_PORT = 8080;
 
-// DNS configuration
-const DNS_PORT = 53;
-const DNS_FORWARDER = '8.8.8.8'; // Google's public DNS server
+// DNS resolution
+const resolveDNS = (hostname, callback) => {
+  const dns = require('dns');
+  dns.lookup(hostname, (err, address) => {
+    if (err) return callback(err);
+    callback(null, address);
+  });
+};
 
-// TLS configuration
+// TLS Server (VPN)
 const tlsOptions = {
   key: fs.readFileSync('private-key.pem'),
   cert: fs.readFileSync('certificate.pem'),
 };
 
-// Create a TLS server for secure VPN connections
-const tlsServer = tls.createServer(tlsOptions, (socket) => {
-  console.log('Secure connection established!');
+tls.createServer(tlsOptions, (socket) => {
+  console.log('✅ TLS VPN client connected');
 
-  socket.write('Welcome to the secure VPN server!\n');
+  socket.write('Secure VPN tunnel established\n');
 
-  // Handle incoming data
   socket.on('data', (data) => {
-    console.log(`Encrypted data received: ${data.toString()}`);
-    socket.write('Data received securely.\n');
+    console.log('🔒 Received data in VPN tunnel:', data.toString());
   });
-
-  // Handle disconnection
-  socket.on('end', () => {
-    console.log('Client disconnected.');
-  });
+}).listen(VPN_PORT, () => {
+  console.log(`🔐 TLS VPN Server is running on port ${VPN_PORT}`);
 });
 
-// Start the TLS server for VPN traffic
-tlsServer.listen(VPN_PORT, VPN_IP, () => {
-  console.log(`TLS VPN server running on ${VPN_IP}:${VPN_PORT}`);
+// WebSocket Proxy to receive HTTP CONNECT
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('VPN Proxy Active');
 });
 
-// Create an HTTP proxy for traffic routing
-const proxy = httpProxy.createProxyServer({});
+const wss = new WebSocket.Server({ server });
 
-// Handle proxy errors
-proxy.on('error', (err, req, res) => {
-  console.error('Proxy error:', err);
-  res.writeHead(500, { 'Content-Type': 'text/plain' });
-  res.end('Proxy error occurred.');
-});
+wss.on('connection', (ws) => {
+  ws.on('message', (msg) => {
+    if (msg.toString().startsWith('CONNECT')) {
+      console.log('🌐 Received CONNECT payload from client');
 
-// Serve index.html to check VPN status
-const httpServer = http.createServer((req, res) => {
-  if (req.url === '/' || req.url === '/index.html') {
-    const filePath = path.join(__dirname, 'index.html');
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        res.writeHead(500);
-        return res.end('Error loading index.html');
-      }
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(data);
-    });
-  } else {
-    // Forward all other requests through the HTTP proxy
-    console.log(`Proxying request: ${req.url}`);
-    proxy.web(req, res, { target: 'http://example.com' }); // Change target dynamically based on req.url if needed
-  }
-});
+      resolveDNS(VPN_HOST, (err, ip) => {
+        if (err) return ws.send('DNS Resolution Failed');
 
-// Start the HTTP server for serving status and routing traffic
-httpServer.listen(8080, VPN_IP, () => {
-  console.log(`HTTP server running on http://${VPN_IP}:8080`);
-});
+        const tlsSocket = tls.connect(
+          {
+            host: ip,
+            port: VPN_PORT,
+            rejectUnauthorized: false, // for self-signed certs
+          },
+          () => {
+            console.log('🔐 TLS connection established to VPN server');
+            ws.send('HTTP/1.1 200 Connection Established\r\n\r\n');
+            tlsSocket.write('Tunnel initiated from proxy\n');
 
-// DNS Server to handle DNS resolution
-const dnsServer = dgram.createSocket('udp4');
+            tlsSocket.on('data', (data) => {
+              ws.send('From VPN: ' + data.toString());
+            });
 
-// Handle incoming DNS requests and forward them to the external DNS server
-dnsServer.on('message', (msg, rinfo) => {
-  console.log(`Received DNS request from ${rinfo.address}`);
+            ws.on('message', (clientData) => {
+              if (!clientData.toString().startsWith('CONNECT')) {
+                tlsSocket.write(clientData);
+              }
+            });
 
-  // Forward the DNS query to Google's DNS server
-  const forwardSocket = dgram.createSocket('udp4');
-  forwardSocket.send(msg, 0, msg.length, DNS_PORT, DNS_FORWARDER, (err) => {
-    if (err) console.error('DNS forwarding error:', err);
-  });
-
-  // Receive the DNS response from the forwarder
-  forwardSocket.on('message', (response) => {
-    dnsServer.send(response, 0, response.length, rinfo.port, rinfo.address);
-    forwardSocket.close(); // Close the forwarder after sending the response
+            tlsSocket.on('end', () => ws.send('VPN disconnected'));
+          }
+        );
+      });
+    }
   });
 });
 
-// Start the DNS server
-dnsServer.bind(DNS_PORT, VPN_IP, () => {
-  console.log(`DNS server running on ${VPN_IP}:${DNS_PORT}`);
+server.listen(PROXY_PORT, () => {
+  console.log(`🧩 Proxy WebSocket server listening on ws://localhost:${PROXY_PORT}`);
 });
