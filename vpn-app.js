@@ -5,7 +5,7 @@ const tls = require('tls');
 const WebSocket = require('ws');
 
 // Configuration
-const VPN_IP = '104.18.36.141';
+const VPN_IP = '172.64.151.115';
 const VPN_PORT = 8090;
 const PROXY_PORT = 8080;
 
