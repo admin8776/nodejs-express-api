@@ -1,9 +1,9 @@
 ﻿__________read-md-hidden-vpn__27/05/2025______________________________
 nodejs: v20.x
 vpn : ip:port
-http server : "172.64.151.115 : 8080" , "http://qptyzt-3000.csb.app : 8080", !!Direct IP access not allowed By Cloudflare.
-TLS VPN SERVER: 172.64.151.115 : 8090
-dns: 172.64.151.115: 53(public Ip sharing) , 8.8.8.8 : 53(server-side)
+http server : "104.18.36.141 : 8080" , "http://qptyzt-8000.csb.app : 8080", !!Direct IP access not allowed By Cloudflare.
+TLS VPN SERVER: 104.18.36.141 : 8090
+dns: 104.18.36.141: 53(public Ip sharing) , 8.8.8.8 : 53(server-side)
 network trafic rooting: udp/tcp-ip
 for testing pourpose
 _______________________________hiddenVpn_ALLRIGHT__RESERVED______________________________
