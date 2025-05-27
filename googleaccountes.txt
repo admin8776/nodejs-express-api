@@ -1,6 +1,9 @@
-﻿__________GOOGLE__ACCOUNTES__PROTECTED__EARIA__08/10/2024______________________________
-email : wfww010@gmail.com
-password : Administer04#
-email :omefant7@gmail.com
-password -:- non created
-_______________________________GOOGLE__ALLRIGHT__RESERVED______________________________
+﻿__________read-md-hidden-vpn__27/05/2025______________________________
+nodejs: v20.x
+vpn : ip:port
+http server : "172.64.151.115 : 8080" , "http://qptyzt-3000.csb.app : 8080", !!Direct IP access not allowed By Cloudflare.
+TLS VPN SERVER: 172.64.151.115 : 8090
+dns: 172.64.151.115: 53(public Ip sharing) , 8.8.8.8 : 53(server-side)
+network trafic rooting: udp/tcp-ip
+for testing pourpose
+_______________________________hiddenVpn_ALLRIGHT__RESERVED______________________________
