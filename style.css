@@ -1,0 +1,5 @@
+ body { font-family: sans-serif; }
+    #log { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+    input, button { padding: 5px; margin: 5px; }
+    .status { font-weight: bold; }
+
