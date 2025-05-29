@@ -1,9 +1,9 @@
 {
   "name": "nodejs-express-api",
   "version": "1.0.0",
-  "main": "vpn-app.js",
+  "main": "galaxy-tunnel.js",
   "scripts": {
-    "start": "node vpn-app.js"
+    "start": "node galaxy-tunnel.js"
   },
   "dependencies": {
     "express": "^4.17.1"
