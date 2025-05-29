@@ -10,7 +10,7 @@ const WebSocket = require('ws');
 const path = require('path');
 
 // Configuration
-const VPN_IP = '64.29.17.129';
+const VPN_IP = '64.29.17.193';
 const HTTP_PORT = 8050;
 const PROXY_PORT = 8060;
 const DNS_PORT = 53;
