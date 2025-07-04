@@ -1,14 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>VPN Status</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Network Connection Status</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-  <h1>Node.js VPN Dashboard</h1>
-  <label>Enter Payload:</label><input type="text" id="payload" placeholder="HTTP CONNECT..." />
-  <button onclick="startConnection()">Start VPN</button>
-  <div id="log">Status: <span class="status" id="status">Idle</span></div>
- <script type="text/javascript" src="script.js"></script>
+
+  <h2>Connection Information Table</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>VPN (host:port)</th>
+        <th>Proxy (host:port)</th>
+        <th>TLS (host:port)</th>
+        <th>DNS (host:port)</th>
+        <th>UDP Socket Status</th>
+        <th>Default UDP Port</th>
+        <th>Keep-Alive</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="client-row">
+        <td>Client</td>
+        <td id="client-vpn">Loading...</td>
+        <td id="client-proxy">Loading...</td>
+        <td id="client-tls">Loading...</td>
+        <td id="client-dns">Loading...</td>
+        <td id="client-udp-status">Loading...</td>
+        <td id="client-udp-port">Loading...</td>
+        <td id="client-keepalive">Loading...</td>
+      </tr>
+      <tr id="server-row">
+        <td>Server</td>
+        <td id="server-vpn">Loading...</td>
+        <td id="server-proxy">Loading...</td>
+        <td id="server-tls">Loading...</td>
+        <td id="server-dns">Loading...</td>
+        <td id="server-udp-status">Loading...</td>
+        <td id="server-udp-port">Loading...</td>
+        <td id="server-keepalive">Loading...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script src="script.js">
+  </script>
 </body>
 </html>
