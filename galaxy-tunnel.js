@@ -16,7 +16,7 @@ const dns = require('dns');
 
 // Configuration
 const VPN_IP = 'localhost';
-const HTTP_PORT = 8050;
+const PORT = 8050;
 const PROXY_PORT = 8060;
 const DNS_PORT = 53;
 const TLS_PORT = 8070;
@@ -27,7 +27,7 @@ const DNS_FORWARDER = '8.8.8.8';
 app.use(express.static(path.join(__dirname)));
 
 // HTTP Server (serving index.html)
-http.createServer((req, res) => {
+http.createServer(app, (req, res) => {
   if (req.url === '/' || req.url === '/index.html') {
     fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
       if (err) return res.end('Error loading page.');
@@ -35,8 +35,8 @@ http.createServer((req, res) => {
       res.end(data);
     });
   }
-}).listen(HTTP_PORT, () => {
-  console.log(`HTTP VPN server running at http://${VPN_IP}:${HTTP_PORT}`);
+}).listen(PORT, () => {
+  console.log(`HTTP VPN server running at http://${VPN_IP}:${PORT}`);
 });
 
 // API for connection info
@@ -137,4 +137,5 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ status: 'Connected to VPN WebSocket' }));
   ws.on('message', msg => console.log('WebSocket message:', msg));
 });
+
 
