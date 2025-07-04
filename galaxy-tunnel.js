@@ -74,7 +74,7 @@ app.get('/api/connection-info', (req, res) => {
 const tlsOptions = {
   key: fs.readFileSync('private-key.pem'),     // Your server's private key
   cert: fs.readFileSync('certificate.pem'),    // Your server's certificate
-  ca: fs.readFileSync('ca.crt'),               // The CA certificate to verify clients (optional)
+  ca: fs.readFileSync('ca.cer'),               // The CA certificate to verify clients (optional)
   requestCert: true,                           // Ask client to send a certificate
   rejectUnauthorized: false                    // Accept even if client doesn’t provide a valid cert
 };
