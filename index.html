@@ -2,74 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Network Connection Status</title>
+  <title>VPN Connection Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
       padding: 20px;
+      background-color: #f9f9f9;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-      background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    h2, h3 {
+      color: #333;
+      text-align: center;
     }
-    th, td {
+
+    table, th, td {
       border: 1px solid #ccc;
+      border-collapse: collapse;
+    }
+
+    th, td {
       padding: 10px;
       text-align: center;
     }
-    th {
-      background-color: #f2f2f2;
+
+    table {
+      width: 100%;
+      background: #fff;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-    h2 {
-      text-align: center;
-      color: #333;
+
+    pre {
+      background-color: #eee;
+      padding: 10px;
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
 
-  <h2>Connection Information Table</h2>
+<h2>Server & Client Connection Overview</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>VPN (host:port)</th>
-        <th>Proxy (host:port)</th>
-        <th>TLS (host:port)</th>
-        <th>DNS (host:port)</th>
-        <th>UDP Socket Status</th>
-        <th>Default UDP Port</th>
-        <th>Keep-Alive</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr id="client-row">
-        <td>Client</td>
-        <td id="client-vpn">Loading...</td>
-        <td id="client-proxy">Loading...</td>
-        <td id="client-tls">Loading...</td>
-        <td id="client-dns">Loading...</td>
-        <td id="client-udp-status">Loading...</td>
-        <td id="client-udp-port">Loading...</td>
-        <td id="client-keepalive">Loading...</td>
-      </tr>
-      <tr id="server-row">
-        <td>Server</td>
-        <td id="server-vpn">Loading...</td>
-        <td id="server-proxy">Loading...</td>
-        <td id="server-tls">Loading...</td>
-        <td id="server-dns">Loading...</td>
-        <td id="server-udp-status">Loading...</td>
-        <td id="server-udp-port">Loading...</td>
-        <td id="server-keepalive">Loading...</td>
-      </tr>
-    </tbody>
-  </table>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>VPN (host:port)</th>
+      <th>Proxy (host:port)</th>
+      <th>TLS (host:port)</th>
+      <th>DNS (host:port)</th>
+      <th>UDP Socket Status</th>
+      <th>Default UDP Port</th>
+      <th>TCP (host:port)</th>
+      <th>Keep-Alive</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Client</td>
+      <td id="client-vpn">Loading...</td>
+      <td id="client-proxy">Loading...</td>
+      <td id="client-tls">Loading...</td>
+      <td id="client-dns">Loading...</td>
+      <td id="client-udp-status">Loading...</td>
+      <td id="client-udp-port">Loading...</td>
+      <td id="client-tcp">Unavailable</td>
+      <td id="client-keepalive">Loading...</td>
+    </tr>
+    <tr>
+      <td>Server</td>
+      <td id="server-vpn">Loading...</td>
+      <td id="server-proxy">Loading...</td>
+      <td id="server-tls">Loading...</td>
+      <td id="server-dns">Loading...</td>
+      <td id="server-udp-status">Loading...</td>
+      <td id="server-udp-port">Loading...</td>
+      <td id="server-tcp">Loading...</td>
+      <td id="server-keepalive">Loading...</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Live VPN TCP/UDP Connections</h3>
+<pre id="connection-log">Loading logs...</pre>
 
   <script src="script.js">
   </script>
