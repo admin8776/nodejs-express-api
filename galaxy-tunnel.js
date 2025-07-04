@@ -8,6 +8,8 @@ const httpProxy = require('http-proxy');
 const dgram = require('dgram');
 const WebSocket = require('ws');
 const path = require('path');
+const url = require('url');
+const dns = require('dns');
 
 // Configuration
 const VPN_IP = 'localhost';
@@ -31,10 +33,34 @@ http.createServer((req, res) => {
   console.log(`HTTP VPN server running at http://${VPN_IP}:${HTTP_PORT}`);
 });
 
-// Proxy Server
+
+// Create a proxy server instance
 const proxy = httpProxy.createProxyServer({});
-http.createServer((req, res) => {
-  proxy.web(req, res, { target: 'https://nodejs-express-api-i4ev.onrender.com' });
+
+// Create HTTPS server
+const server = https.createServer(tlsOptions, (req, res) => {
+  const parsedUrl = url.parse(req.url);
+  const hostname = parsedUrl.hostname || req.headers.host;
+
+  // Resolve DNS for the target hostname
+  dns.lookup(hostname, (err, address) => {
+    if (err) {
+      console.error(`DNS resolution error for ${hostname}:`, err);
+      res.writeHead(502, { 'Content-Type': 'text/plain' });
+      res.end('DNS resolution failed');
+      return;
+    }
+
+    const target = `${parsedUrl.protocol || 'http:'}//${address}`;
+
+    console.log(`Proxying ${req.method} request for ${hostname} (${address}) to ${target}`);
+
+    proxy.web(req, res, { target, changeOrigin: true }, (proxyErr) => {
+      console.error('Proxy error:', proxyErr);
+      res.writeHead(500);
+      res.end('Proxy error');
+    });
+  });
 }).listen(PROXY_PORT, () => {
   console.log(`HTTP Proxy running on ${VPN_IP}:${PROXY_PORT}`);
 });
