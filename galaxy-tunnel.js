@@ -15,12 +15,13 @@ const url = require('url');
 const dns = require('dns');
 
 // Configuration
-const VPN_IP = 'localhost';
-const PORT = 8050;
-const PROXY_PORT = 8060;
-const DNS_PORT = 53;
-const TLS_PORT = 8070;
-const WS_PORT = 8080;
+const VPN_IP = 'localhost';         // Or your server's public IP
+const PORT = 80;                    // HTTP (for payloads or tunneling tricks)
+const PROXY_PORT = 443;            // HTTPS (used in TLS/SNI injection and OverVPN)
+const DNS_PORT = 53;               // DNS tunneling (UDP)
+const TLS_PORT = 992;              // TLS over TCP (commonly used for VPN fallback)
+const WS_PORT = 8080;              // WebSocket fallback or control
+const UDP_PORT = 1194;     // Default UDP VPN port
 const DNS_FORWARDER = '8.8.8.8';
 
 // Serve static files (including index.html)
@@ -136,6 +137,34 @@ const wss = new WebSocket.Server({ port: WS_PORT }, () => {
 wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ status: 'Connected to VPN WebSocket' }));
   ws.on('message', msg => console.log('WebSocket message:', msg));
+});
+
+const udpVpnServer = dgram.createSocket('udp4');
+
+udpVpnServer.on('listening', () => {
+  const address = udpVpnServer.address();
+  console.log(`✅ OpenVPN UDP server is running on ${address.address}:${address.port}`);
+});
+
+udpVpnServer.on('message', (msg, rinfo) => {
+  console.log(`📨 OpenVPN UDP packet received from ${rinfo.address}:${rinfo.port}`);
+  
+  // Log and store this connection
+  udpConnections.push({
+    ip: rinfo.address,
+    port: rinfo.port,
+    time: new Date().toISOString(),
+    protocol: 'UDP',
+    status: 'Active'
+  });
+
+  // Send a basic response (this would normally be OpenVPN protocol data)
+  const response = Buffer.from('Welcome to the UDP VPN port (1194)');
+  udpVpnServer.send(response, 0, response.length, rinfo.port, rinfo.address);
+});
+
+udpVpnServer.bind(UDP_PORT, () => {
+  console.log(`🔒 UDP VPN server bound to port ${UDP_PORT}`);
 });
 
 app.get('/api/vpn-connections', (req, res) => {
