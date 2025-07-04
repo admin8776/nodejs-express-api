@@ -40,6 +40,7 @@ http.createServer((req, res) => {
   console.log(`HTTP VPN server running at http://${VPN_IP}:${HTTP_PORT}`);
 });
 
+// API for connection info
 app.get('/api/connection-info', (req, res) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   const userAgent = req.headers['user-agent'];
@@ -47,26 +48,22 @@ app.get('/api/connection-info', (req, res) => {
 
   const info = {
     client: {
-      vpn: "Unknown (Browser cannot access VPN info)",
-      proxy: "Unknown (Not visible from browser)",
+      vpn: "Unknown",
+      proxy: "Unknown",
       tls: `${tlsInfo.name} (${tlsInfo.version})`,
-      dns: "Unknown (Browser cannot access DNS info)",
-      udpStatus: "Unavailable in browser",
+      dns: "Unknown",
+      udpStatus: "Unavailable",
       udpPort: "N/A",
       keepAlive: req.headers.connection === 'keep-alive'
     },
     server: {
-      vpn: "VPN_IP:HTTP_PORT",
-      proxy: "VPN_IP:PROXY_PORT",
-      tls: "VPN_IP:TLS_PORT",
-      dns: "DNS_FORWARDER:DNS_PORT",
+      vpn: `${VPN_IP}:${PORT}`,
+      proxy: `${VPN_IP}:${PROXY_PORT}`,
+      tls: `${VPN_IP}:${TLS_PORT}`,
+      dns: `${DNS_FORWARDER}:${DNS_PORT}`,
       udpStatus: "Connected",
-      udpPort: "DNS_PORT",
+      udpPort: `${DNS_PORT}`,
       keepAlive: true
-    },
-    metadata: {
-      clientIp,
-      userAgent
     }
   };
 
