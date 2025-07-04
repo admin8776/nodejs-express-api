@@ -33,6 +33,40 @@ http.createServer((req, res) => {
   console.log(`HTTP VPN server running at http://${VPN_IP}:${HTTP_PORT}`);
 });
 
+app.get('/api/connection-info', (req, res) => {
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const userAgent = req.headers['user-agent'];
+  const tlsInfo = req.socket.getCipher ? req.socket.getCipher() : { name: 'N/A', version: 'N/A' };
+
+  const info = {
+    client: {
+      vpn: "Unknown (Browser cannot access VPN info)",
+      proxy: "Unknown (Not visible from browser)",
+      tls: `${tlsInfo.name} (${tlsInfo.version})`,
+      dns: "Unknown (Browser cannot access DNS info)",
+      udpStatus: "Unavailable in browser",
+      udpPort: "N/A",
+      keepAlive: req.headers.connection === 'keep-alive'
+    },
+    server: {
+      vpn: "VPN_IP:HTTP_PORT",
+      proxy: "VPN_IP:PROXY_PORT",
+      tls: "VPN_IP:TLS_PORT",
+      dns: "DNS_FORWARDER:DNS_PORT",
+      udpStatus: "Connected",
+      udpPort: "DNS_PORT",
+      keepAlive: true
+    },
+    metadata: {
+      clientIp,
+      userAgent
+    }
+  };
+
+  res.json(info);
+});
+
+
 // TLS VPN Secure Server
 const tlsOptions = {
   key: fs.readFileSync('private-key.pem'),
