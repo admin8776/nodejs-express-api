@@ -34,7 +34,7 @@ http.createServer((req, res) => {
 // Proxy Server
 const proxy = httpProxy.createProxyServer({});
 http.createServer((req, res) => {
-  proxy.web(req, res, { target: 'http://example.com' });
+  proxy.web(req, res, { target: 'https://nodejs-express-api-i4ev.onrender.com' });
 }).listen(PROXY_PORT, () => {
   console.log(`HTTP Proxy running on ${VPN_IP}:${PROXY_PORT}`);
 });
