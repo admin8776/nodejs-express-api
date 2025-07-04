@@ -138,6 +138,14 @@ wss.on('connection', (ws) => {
   ws.on('message', msg => console.log('WebSocket message:', msg));
 });
 
+app.get('/api/vpn-connections', (req, res) => {
+  res.json({
+    tcp: tcpConnections,
+    udp: udpConnections
+  });
+});
+
+
 const tcpConnections = [];
 
 const tcpServer = net.createServer((socket) => {
@@ -170,4 +178,28 @@ const tcpServer = net.createServer((socket) => {
 
   socket.write('Welcome to the TCP VPN server.\n');
 });
+
+const udpConnections = [];
+
+const dnsServer = dgram.createSocket('udp4');
+
+dnsServer.on('message', (msg, rinfo) => {
+  console.log(`📡 UDP DNS request from ${rinfo.address}:${rinfo.port}`);
+
+  udpConnections.push({
+    ip: rinfo.address,
+    port: rinfo.port,
+    time: new Date().toISOString(),
+    protocol: 'UDP',
+    status: 'Received'
+  });
+
+  const forwardSocket = dgram.createSocket('udp4');
+  forwardSocket.send(msg, 0, msg.length, 53, DNS_FORWARDER);
+  forwardSocket.on('message', (response) => {
+    dnsServer.send(response, 0, response.length, rinfo.port, rinfo.address);
+    forwardSocket.close();
+  });
+});
+
 
