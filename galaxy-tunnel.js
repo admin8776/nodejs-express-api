@@ -33,6 +33,19 @@ http.createServer((req, res) => {
   console.log(`HTTP VPN server running at http://${VPN_IP}:${HTTP_PORT}`);
 });
 
+// TLS VPN Secure Server
+const tlsOptions = {
+  key: fs.readFileSync('private-key.pem'),
+  cert: fs.readFileSync('certificate.pem'),
+};
+tls.createServer(tlsOptions, (socket) => {
+  console.log('TLS client connected.');
+  socket.write('Welcome to TLS VPN\n');
+  socket.on('data', data => console.log('TLS data:', data.toString()));
+}).listen(TLS_PORT, () => {
+  console.log(`TLS VPN server on ${VPN_IP}:${TLS_PORT}`);
+});
+
 
 // Create a proxy server instance
 const proxy = httpProxy.createProxyServer({});
@@ -77,19 +90,6 @@ dnsServer.on('message', (msg, rinfo) => {
 });
 dnsServer.bind(DNS_PORT, () => {
   console.log(`DNS server running on ${VPN_IP}:${DNS_PORT}`);
-});
-
-// TLS VPN Secure Server
-const tlsOptions = {
-  key: fs.readFileSync('private-key.pem'),
-  cert: fs.readFileSync('certificate.pem'),
-};
-tls.createServer(tlsOptions, (socket) => {
-  console.log('TLS client connected.');
-  socket.write('Welcome to TLS VPN\n');
-  socket.on('data', data => console.log('TLS data:', data.toString()));
-}).listen(TLS_PORT, () => {
-  console.log(`TLS VPN server on ${VPN_IP}:${TLS_PORT}`);
 });
 
 // WebSocket Server
