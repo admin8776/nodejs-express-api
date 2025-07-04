@@ -70,20 +70,28 @@ app.get('/api/connection-info', (req, res) => {
   res.json(info);
 });
 
-
-// TLS VPN Secure Server
+// TLS VPN Secure Server with CA support
 const tlsOptions = {
-  key: fs.readFileSync('private-key.pem'),
-  cert: fs.readFileSync('certificate.pem'),
+  key: fs.readFileSync('private-key.pem'),     // Your server's private key
+  cert: fs.readFileSync('certificate.pem'),    // Your server's certificate
+  ca: fs.readFileSync('ca.crt'),               // The CA certificate to verify clients (optional)
+  requestCert: true,                           // Ask client to send a certificate
+  rejectUnauthorized: false                    // Accept even if client doesn’t provide a valid cert
 };
-tls.createServer(tlsOptions, (socket) => {
-  console.log('TLS client connected.');
-  socket.write('Welcome to TLS VPN\n');
-  socket.on('data', data => console.log('TLS data:', data.toString()));
-}).listen(TLS_PORT, () => {
-  console.log(`TLS VPN server on ${VPN_IP}:${TLS_PORT}`);
-});
 
+const tlsServer = tls.createServer(tlsOptions, (socket) => {
+  const authorized = socket.authorized ? '✅ authorized' : '❌ unauthorized';
+  console.log(`TLS client connected: ${authorized}`);
+
+  socket.write('Welcome to TLS VPN\n');
+  if (!socket.authorized) {
+    console.log('⚠️  TLS client was not authorized:', socket.authorizationError);
+  }
+  socket.on('data', data => console.log('TLS data:', data.toString()));
+});
+tlsServer.listen(TLS_PORT, () => {
+  console.log(`🔒 TLS VPN server running on ${VPN_IP}:${TLS_PORT}`);
+});
 
 // Create a proxy server instance
 const proxy = httpProxy.createProxyServer({});
