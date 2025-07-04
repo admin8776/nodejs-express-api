@@ -2,7 +2,6 @@
 // Import required modules
 const express = require('express');
 const app = express(); 
-const PORT = 3000;
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -139,7 +138,3 @@ wss.on('connection', (ws) => {
   ws.on('message', msg => console.log('WebSocket message:', msg));
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
