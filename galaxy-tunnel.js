@@ -181,8 +181,6 @@ const tcpServer = net.createServer((socket) => {
 
 const udpConnections = [];
 
-const dnsServer = dgram.createSocket('udp4');
-
 dnsServer.on('message', (msg, rinfo) => {
   console.log(`📡 UDP DNS request from ${rinfo.address}:${rinfo.port}`);
 
