@@ -1,4 +1,8 @@
 // Full Node.js VPN server code would go here
+// Import required modules
+const express = require('express');
+const app = express(); 
+const PORT = 3000;
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -19,6 +23,9 @@ const DNS_PORT = 53;
 const TLS_PORT = 8070;
 const WS_PORT = 8080;
 const DNS_FORWARDER = '8.8.8.8';
+
+// Serve static files (including index.html)
+app.use(express.static(path.join(__dirname)));
 
 // HTTP Server (serving index.html)
 http.createServer((req, res) => {
@@ -133,4 +140,9 @@ const wss = new WebSocket.Server({ port: WS_PORT }, () => {
 wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ status: 'Connected to VPN WebSocket' }));
   ws.on('message', msg => console.log('WebSocket message:', msg));
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
