@@ -138,4 +138,36 @@ wss.on('connection', (ws) => {
   ws.on('message', msg => console.log('WebSocket message:', msg));
 });
 
+const tcpConnections = [];
+
+const tcpServer = net.createServer((socket) => {
+  const remoteAddress = `${socket.remoteAddress}:${socket.remotePort}`;
+  console.log(`📥 New TCP connection from ${remoteAddress}`);
+
+  // Store connection details
+  tcpConnections.push({
+    ip: socket.remoteAddress,
+    port: socket.remotePort,
+    time: new Date().toISOString(),
+    protocol: 'TCP',
+    status: 'Connected'
+  });
+
+  socket.on('data', (data) => {
+    console.log(`📝 TCP data from ${remoteAddress}: ${data}`);
+  });
+
+  socket.on('end', () => {
+    console.log(`📴 TCP client disconnected: ${remoteAddress}`);
+    // Mark as disconnected
+    const conn = tcpConnections.find(c => c.ip === socket.remoteAddress && c.port === socket.remotePort);
+    if (conn) conn.status = 'Disconnected';
+  });
+
+  socket.on('error', (err) => {
+    console.error(`❌ TCP error from ${remoteAddress}:`, err.message);
+  });
+
+  socket.write('Welcome to the TCP VPN server.\n');
+});
 
