@@ -104,53 +104,7 @@ tlsServer.listen(TLS_PORT, () => {
 // Create a proxy server instance
 const proxy = httpProxy.createProxyServer({});
 
-// Create HTTPS server
 const proxyServer = https.createServer(tlsOptions, (req, res) => {
-  const parsedUrl = url.parse(req.url);
-  const targetHost = req.headers['x-target-host'] || req.headers.host;
-
-  if (!targetHost) {
-    res.writeHead(400, { 'Content-Type': 'text/plain' });
-    return res.end('Missing target host');
-  }
-
-  dns.lookup(targetHost, (err, address) => {
-    if (err) {
-      console.error(`❌ DNS lookup failed for ${targetHost}:`, err);
-      res.writeHead(502, { 'Content-Type': 'text/plain' });
-      return res.end('DNS resolution failed');
-    }
-
-    const targetUrl = `${parsedUrl.protocol || 'http:'}//${address}`;
-    console.log(`🌍 Proxying ${req.method} to ${targetUrl}`);
-
-    proxy.web(req, res, { target: targetUrl, changeOrigin: true }, (err) => {
-      console.error('Proxy error:', err);
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('Proxy failed');
-    });
-  });
-});
-
-// 2. Support du CONNECT (pour tunnel TLS/VPN)
-proxyServer.on('connect', (req, clientSocket, head) => {
-  const [targetHost, targetPort] = req.url.split(':');
-  const port = parseInt(targetPort, 10) || 443;
-
-  const serverSocket = net.connect(port, targetHost, () => {
-    clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
-    serverSocket.write(head);
-    serverSocket.pipe(clientSocket);
-    clientSocket.pipe(serverSocket);
-  });
-
-  serverSocket.on('error', (err) => {
-    console.error('Tunnel error:', err.message);
-    clientSocket.end('HTTP/1.1 500 Tunnel Error\r\n');
-  });
-});
-
-proxyServer.on('request', (req, res) => {
   if (req.method === 'POST' && req.url === '/start-connect') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -189,11 +143,54 @@ proxyServer.on('request', (req, res) => {
         res.end('Invalid JSON');
       }
     });
+    return;
   }
+
+  // Default proxy forwarding
+  const parsedUrl = url.parse(req.url);
+  const targetHost = req.headers['x-target-host'] || req.headers.host;
+
+  if (!targetHost) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    return res.end('Missing target host');
+  }
+
+  dns.lookup(targetHost, (err, address) => {
+    if (err) {
+      console.error(`❌ DNS lookup failed for ${targetHost}:`, err);
+      res.writeHead(502, { 'Content-Type': 'text/plain' });
+      return res.end('DNS resolution failed');
+    }
+
+    const targetUrl = `${parsedUrl.protocol || 'http:'}//${address}`;
+    console.log(`🌍 Proxying ${req.method} to ${targetUrl}`);
+
+    proxy.web(req, res, { target: targetUrl, changeOrigin: true }, (err) => {
+      console.error('Proxy error:', err);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Proxy failed');
+    });
+  });
 });
 
+// CONNECT support
+proxyServer.on('connect', (req, clientSocket, head) => {
+  const [targetHost, targetPort] = req.url.split(':');
+  const port = parseInt(targetPort, 10) || 443;
 
-// 3. Lancer le serveur proxy
+  const serverSocket = net.connect(port, targetHost, () => {
+    clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+    serverSocket.write(head);
+    serverSocket.pipe(clientSocket);
+    clientSocket.pipe(serverSocket);
+  });
+
+  serverSocket.on('error', (err) => {
+    console.error('Tunnel error:', err.message);
+    clientSocket.end('HTTP/1.1 500 Tunnel Error\r\n');
+  });
+});
+
 proxyServer.listen(PROXY_PORT, () => {
   console.log(`🛡️  Proxy HTTP+CONNECT listening on ${VPN_IP}:${PROXY_PORT}`);
 });
