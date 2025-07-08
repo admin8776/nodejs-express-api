@@ -27,6 +27,7 @@ const DNS_FORWARDER = '8.8.8.8';
 
 // Serve static files (including index.html)
 app.use(express.static(path.join(__dirname)));
+app.use(express.json());
 
 app.use(cors({
   origin: 'http://localhost:8000', // Or your specific allowed origin(s)
