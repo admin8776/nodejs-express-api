@@ -150,6 +150,49 @@ proxyServer.on('connect', (req, clientSocket, head) => {
   });
 });
 
+proxyServer.on('request', (req, res) => {
+  if (req.method === 'POST' && req.url === '/start-connect') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const payload = data.payload || '';
+        const targetHost = req.headers['x-target-host'] || 'localhost';
+        const targetPort = data.port || 80;
+
+        console.log(`📡 Received /start-connect for ${targetHost}:${targetPort}`);
+        console.log('Payload:', payload);
+
+        const socket = net.connect(targetPort, targetHost, () => {
+          socket.write(payload + '\n');
+        });
+
+        let response = '';
+        socket.on('data', (chunk) => {
+          response += chunk.toString();
+        });
+
+        socket.on('end', () => {
+          res.writeHead(200, { 'Content-Type': 'text/plain' });
+          res.end(response || '✅ Connection completed with no data');
+        });
+
+        socket.on('error', (err) => {
+          console.error('❌ Socket error:', err.message);
+          res.writeHead(502, { 'Content-Type': 'text/plain' });
+          res.end('Connection failed: ' + err.message);
+        });
+      } catch (err) {
+        console.error('❌ Invalid JSON:', err.message);
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Invalid JSON');
+      }
+    });
+  }
+});
+
+
 // 3. Lancer le serveur proxy
 proxyServer.listen(PROXY_PORT, () => {
   console.log(`🛡️  Proxy HTTP+CONNECT listening on ${VPN_IP}:${PROXY_PORT}`);
