@@ -13,6 +13,7 @@ const WebSocket = require('ws');
 const path = require('path');
 const url = require('url');
 const dns = require('dns');
+const cors = require('cors');
 
 // Configuration
 const VPN_IP = 'localhost';         // Or your server's public IP
@@ -26,6 +27,13 @@ const DNS_FORWARDER = '8.8.8.8';
 
 // Serve static files (including index.html)
 app.use(express.static(path.join(__dirname)));
+
+app.use(cors({
+  origin: '*', // ou spécifie ton front-end : 'https://monclient.com'
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 
 // HTTP Server (serving index.html)
 http.createServer(app, (req, res) => {
@@ -97,32 +105,57 @@ tlsServer.listen(TLS_PORT, () => {
 const proxy = httpProxy.createProxyServer({});
 
 // Create HTTPS server
-const server = https.createServer(tlsOptions, (req, res) => {
+const proxyServer = http.createServer(tlsOptions, (req, res) => {
   const parsedUrl = url.parse(req.url);
-  const hostname = parsedUrl.hostname || req.headers.host;
+  const targetHost = req.headers['x-target-host'] || req.headers.host;
 
-  // Resolve DNS for the target hostname
-  dns.lookup(hostname, (err, address) => {
+  if (!targetHost) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    return res.end('Missing target host');
+  }
+
+  dns.lookup(targetHost, (err, address) => {
     if (err) {
-      console.error(`DNS resolution error for ${hostname}:`, err);
+      console.error(`❌ DNS lookup failed for ${targetHost}:`, err);
       res.writeHead(502, { 'Content-Type': 'text/plain' });
-      res.end('DNS resolution failed');
-      return;
+      return res.end('DNS resolution failed');
     }
 
-    const target = `${parsedUrl.protocol || 'http:'}//${address}`;
+    const targetUrl = `${parsedUrl.protocol || 'http:'}//${address}`;
+    console.log(`🌍 Proxying ${req.method} to ${targetUrl}`);
 
-    console.log(`Proxying ${req.method} request for ${hostname} (${address}) to ${target}`);
-
-    proxy.web(req, res, { target, changeOrigin: true }, (proxyErr) => {
-      console.error('Proxy error:', proxyErr);
-      res.writeHead(500);
-      res.end('Proxy error');
+    proxy.web(req, res, { target: targetUrl, changeOrigin: true }, (err) => {
+      console.error('Proxy error:', err);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Proxy failed');
     });
   });
-}).listen(PROXY_PORT, () => {
-  console.log(`HTTP Proxy running on ${VPN_IP}:${PROXY_PORT}`);
 });
+
+// 2. Support du CONNECT (pour tunnel TLS/VPN)
+proxyServer.on('connect', (req, clientSocket, head) => {
+  const [targetHost, targetPort] = req.url.split(':');
+  const port = parseInt(targetPort, 10) || 443;
+
+  const serverSocket = net.connect(port, targetHost, () => {
+    clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+    serverSocket.write(head);
+    serverSocket.pipe(clientSocket);
+    clientSocket.pipe(serverSocket);
+  });
+
+  serverSocket.on('error', (err) => {
+    console.error('Tunnel error:', err.message);
+    clientSocket.end('HTTP/1.1 500 Tunnel Error\r\n');
+  });
+});
+
+// 3. Lancer le serveur proxy
+proxyServer.listen(PROXY_PORT, () => {
+  console.log(`🛡️  Proxy HTTP+CONNECT listening on ${VPN_IP}:${PROXY_PORT}`);
+});
+
+
 
 // DNS Resolver
 const dnsServer = dgram.createSocket('udp4');
