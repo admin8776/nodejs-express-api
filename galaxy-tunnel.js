@@ -29,9 +29,9 @@ const DNS_FORWARDER = '8.8.8.8';
 app.use(express.static(path.join(__dirname)));
 
 app.use(cors({
-  origin: '*', // ou spécifie ton front-end : 'https://monclient.com'
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
+  origin: 'http://localhost:8000', // Or your specific allowed origin(s)
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-target-host'] // Add 'x-target-host' here
 }));
 
 
