@@ -105,7 +105,7 @@ tlsServer.listen(TLS_PORT, () => {
 const proxy = httpProxy.createProxyServer({});
 
 // Create HTTPS server
-const proxyServer = http.createServer(tlsOptions, (req, res) => {
+const proxyServer = https.createServer(tlsOptions, (req, res) => {
   const parsedUrl = url.parse(req.url);
   const targetHost = req.headers['x-target-host'] || req.headers.host;
 
